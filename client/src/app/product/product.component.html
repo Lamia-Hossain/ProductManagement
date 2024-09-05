@@ -1,0 +1,407 @@
+<div class="lg:ml-48 p-4 flex flex-col gap-3 justify-center">
+  <div class="flex flex-row flex-wrap gap-3 justify-between items-center">
+    <div class="flex gap-2">
+      <p class="text-2xl font-medium">
+        All Products ({{ getTotalProductCount() }})
+      </p>
+
+      <!-- Add button for product -->
+      <button
+        (click)="openAddModal()"
+        class="border-2 border-green-700 text-green-500 hover:text-white font-semibold text-base px-2 rounded hover:bg-green-700 mb-auto mt-1"
+      >
+        +
+      </button>
+    </div>
+
+    <!-- Product Search Field -->
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="applyFilter()"
+      placeholder="Search products..."
+      class="p-2 border border-gray-300 rounded"
+    />
+  </div>
+
+  <!-- Display a message while data is loading -->
+  <div *ngIf="loading">Loading...</div>
+  <div *ngIf="errorMessage" class="text-red-500">{{ errorMessage }}</div>
+
+  <div *ngIf="getTotalProductCount() === 0">
+    <p class="text-blue-500 text-base text-center mt-4 animate-pulse">
+      Currently there is no product in list!!!
+    </p>
+  </div>
+
+  <!-- Products table -->
+  <div
+    *ngIf="getTotalProductCount() > 0"
+    class="overflow-x-auto shadow-lg bg-white"
+  >
+    <table
+      *ngIf="!loading && !errorMessage"
+      mat-table
+      [dataSource]="dataSource"
+      class="mat-elevation-z8"
+    >
+      <!-- Product Name Column -->
+      <ng-container matColumnDef="product_name">
+        <th mat-header-cell *matHeaderCellDef>Product Name</th>
+        <td mat-cell *matCellDef="let element">{{ element.product_name }}</td>
+      </ng-container>
+
+      <!-- Category Name Column -->
+      <ng-container matColumnDef="category_name">
+        <th mat-header-cell *matHeaderCellDef>Category</th>
+        <td mat-cell *matCellDef="let element">{{ element.category_name }}</td>
+      </ng-container>
+
+      <!-- Quantity Column -->
+      <ng-container matColumnDef="quantity">
+        <th mat-header-cell *matHeaderCellDef>Quantity</th>
+        <td mat-cell *matCellDef="let element">{{ element.quantity }}</td>
+      </ng-container>
+
+      <!-- Price Column -->
+      <ng-container matColumnDef="price">
+        <th mat-header-cell *matHeaderCellDef>Unit Price</th>
+        <td mat-cell *matCellDef="let element">{{ element.price }}</td>
+      </ng-container>
+
+      <!-- Total Price Column -->
+      <ng-container matColumnDef="total">
+        <th mat-header-cell *matHeaderCellDef>Total Price</th>
+        <td mat-cell *matCellDef="let element">{{ element.total }}</td>
+      </ng-container>
+
+      <!-- Description Column -->
+      <ng-container matColumnDef="description">
+        <th mat-header-cell *matHeaderCellDef>Description</th>
+        <td mat-cell *matCellDef="let element">
+          <p class="w-32">{{ element.description }}</p>
+        </td>
+      </ng-container>
+
+      <!-- Create Date Column -->
+      <ng-container matColumnDef="create_date">
+        <th mat-header-cell *matHeaderCellDef>Create Date</th>
+        <td mat-cell *matCellDef="let element">{{ element.create_date }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let element">
+          <div class="flex">
+            <!-- Edit button -->
+            <button
+              class="p-1 text-blue-500 hover:text-blue-700"
+              (click)="openEditModal(element)"
+              aria-label="Edit"
+            >
+              <span class="material-icons">edit</span>
+            </button>
+
+            <!-- Delete button -->
+            <button
+              class="p-1 text-red-500 hover:text-red-700 ml-2"
+              (click)="deleteProduct(element.id)"
+              aria-label="Delete"
+            >
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Header and Row Definitions -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+  </div>
+  <!-- Pagination -->
+  <mat-paginator
+    [length]="products.length"
+    [pageSize]="5"
+    [pageSizeOptions]="[5, 10, 20]"
+    aria-label="Select page"
+  >
+  </mat-paginator>
+
+  <!-- Add Product Modal -->
+  <div class="modal" *ngIf="showAddModal">
+    <div
+      class="bg-white rounded-xl my-[15%] lg:my-[10%] mx-auto p-5 border border-slate-300 w-max"
+    >
+      <div class="flex justify-between mb-4">
+        <p class="text-xl font-semibold">Add Product</p>
+        <span class="close" (click)="closeAddModal()">&times;</span>
+      </div>
+
+      <form class="flex flex-col gap-4" (ngSubmit)="addProduct()">
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Product Name Input -->
+          <div class="flex flex-col">
+            <label for="productName" class="font-medium">Product Name:</label>
+            <input
+              type="text"
+              id="productName"
+              [(ngModel)]="newProduct.productName"
+              name="productName"
+              class="p-2 border border-gray-300 rounded"
+              required
+            />
+          </div>
+
+          <!-- Category Select -->
+          <div class="flex flex-col">
+            <label for="categoryId" class="font-medium">Category:</label>
+            <div class="flex items-center gap-2">
+              <select
+                id="categoryId"
+                [(ngModel)]="newProduct.categoryId"
+                name="categoryId"
+                class="p-2 border border-gray-300 rounded"
+                required
+              >
+                <option value="" disabled selected>Select a category</option>
+                <option
+                  *ngFor="let category of categories"
+                  [value]="category.id"
+                >
+                  {{ category.name }}
+                </option>
+              </select>
+
+              <!-- Add Category Button -->
+              <button
+                type="button"
+                class="p-1 text-green-500 hover:text-green-700 border border-green-500 rounded"
+                (click)="openAddCategoryModal()"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Price Input -->
+          <div class="flex flex-col">
+            <label for="price" class="font-medium">Price:</label>
+            <input
+              type="number"
+              id="price"
+              [(ngModel)]="newProduct.price"
+              name="price"
+              class="p-2 border border-gray-300 rounded"
+              min="0"
+              required
+            />
+          </div>
+
+          <!-- Quantity Input -->
+          <div class="flex flex-col">
+            <label for="quantity" class="font-medium">Quantity:</label>
+            <input
+              type="number"
+              id="quantity"
+              [(ngModel)]="newProduct.quantity"
+              name="quantity"
+              class="p-2 border border-gray-300 rounded"
+              min="0"
+              required
+            />
+          </div>
+
+          <!-- Create Date Input -->
+          <div class="flex flex-col">
+            <label for="createDate" class="font-medium">Create Date:</label>
+            <input
+              type="date"
+              id="createDate"
+              [(ngModel)]="newProduct.createDate"
+              name="createDate"
+              class="p-2 border border-gray-300 rounded"
+              required
+            />
+          </div>
+
+          <!-- Description Input -->
+          <div class="flex flex-col">
+            <label for="description" class="font-medium">Description:</label>
+            <textarea
+              id="description"
+              [(ngModel)]="newProduct.description"
+              name="description"
+              class="p-2 border border-gray-300 rounded"
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="bg-blue-200 p-2 rounded-md mx-auto hover:shadow"
+        >
+          Add
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Product Modal -->
+  <div class="modal" *ngIf="showModal">
+    <div
+      class="bg-white rounded-xl my-[15%] lg:my-[10%] mx-auto p-5 border border-slate-300 w-max"
+    >
+      <div class="flex justify-between mb-4">
+        <p class="text-xl font-semibold">Edit Product</p>
+        <span class="close" (click)="closeModal()">&times;</span>
+      </div>
+
+      <form class="flex flex-col gap-4" (ngSubmit)="updateProduct()">
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Product Name Input -->
+          <div class="flex flex-col">
+            <label for="product_name" class="font-medium">Product Name:</label>
+            <input
+              type="text"
+              id="product_name"
+              [(ngModel)]="selectedProduct.product_name"
+              name="product_name"
+              class="p-2 border border-gray-300 rounded"
+              required
+            />
+          </div>
+
+          <!-- Category Select -->
+          <div class="flex flex-col">
+            <label for="categoryId" class="font-medium">Category:</label>
+            <div class="flex items-center gap-2">
+              <select
+                id="categoryId"
+                [(ngModel)]="selectedProduct.category_id"
+                name="categoryId"
+                class="p-2 border border-gray-300 rounded"
+                required
+              >
+                <option value="" disabled>Select a category</option>
+                <option
+                  *ngFor="let category of categories"
+                  [value]="category.id"
+                >
+                  {{ category.name }}
+                </option>
+              </select>
+              <!-- Add Category Button -->
+              <button
+                type="button"
+                class="p-1 text-green-500 hover:text-green-700 border border-green-500 rounded"
+                (click)="openAddCategoryModal()"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Price Input -->
+          <div class="flex flex-col">
+            <label for="price" class="font-medium">Price:</label>
+            <input
+              type="number"
+              id="price"
+              [(ngModel)]="selectedProduct.price"
+              name="price"
+              class="p-2 border border-gray-300 rounded"
+              min="0"
+              required
+            />
+          </div>
+
+          <!-- Quantity Input -->
+          <div class="flex flex-col">
+            <label for="quantity" class="font-medium">Quantity:</label>
+            <input
+              type="number"
+              id="quantity"
+              [(ngModel)]="selectedProduct.quantity"
+              name="quantity"
+              class="p-2 border border-gray-300 rounded"
+              min="0"
+              required
+            />
+          </div>
+
+          <!-- Create Date Input -->
+          <div class="flex flex-col">
+            <label for="create_date" class="font-medium">Create Date:</label>
+            <input
+              type="date"
+              id="create_date"
+              [(ngModel)]="selectedProduct.create_date"
+              name="create_date"
+              class="p-2 border border-gray-300 rounded"
+              required
+            />
+          </div>
+
+          <!-- Description Input -->
+          <div class="flex flex-col">
+            <label for="description" class="font-medium">Description:</label>
+            <textarea
+              id="description"
+              [(ngModel)]="selectedProduct.description"
+              name="description"
+              class="p-2 border border-gray-300 rounded"
+              required
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="bg-blue-200 p-2 rounded-md mx-auto hover:shadow"
+        >
+          Update Product
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div class="modal" *ngIf="showAddCategoryModal">
+    <div
+      class="bg-white rounded-xl my-[15%] lg:my-[10%] mx-auto p-5 border border-slate-300 w-max"
+    >
+      <div class="flex justify-between mb-4">
+        <p class="text-xl font-semibold">Add Category</p>
+        <span class="close" (click)="closeAddCategoryModal()">&times;</span>
+      </div>
+
+      <form class="flex flex-col gap-4" (ngSubmit)="addCategory()">
+        <!-- Category Name Input -->
+        <div class="flex flex-col">
+          <label for="categoryName" class="font-medium">Category Name:</label>
+          <input
+            type="text"
+            id="categoryName"
+            [(ngModel)]="newCategoryName"
+            name="categoryName"
+            class="p-2 border border-gray-300 rounded"
+            required
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="bg-blue-200 p-2 rounded-md mx-auto hover:shadow"
+        >
+          Add
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

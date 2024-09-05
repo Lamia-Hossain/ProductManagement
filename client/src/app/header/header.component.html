@@ -1,0 +1,54 @@
+<header>
+  <div
+    class="hidden lg:block fixed h-screen bg-blue-50 border-r-2 shadow-inner p-2 w-max"
+  >
+    <!-- Nav-sidebar for large screen -->
+    <nav class="flex flex-col items-center lg:items-start gap-5">
+      <img
+        src="assets/PM.jpg"
+        alt="Logo"
+        class="lg:w-44 rounded-lg shadow-md border border-blue-200"
+      />
+      <ul class="text-lg font-medium text-slate-800 w-full">
+        <li
+          *ngFor="let item of menuItems"
+          class="p-2 rounded-md hover:bg-blue-100 mb-2"
+          routerLinkActive="bg-blue-200"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a [routerLink]="item.link" class="flex items-center gap-1">
+            <mat-icon>{{ item.icon }}</mat-icon
+            >{{ item.name }}
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Topbar -->
+  <div
+    class="lg:ml-48 bg-blue-50 h-auto lg:h-14 p-2 text-xl font-medium flex flex-col gap-2 items-center shadow-inner"
+  >
+    <p class="p-2">Product Management</p>
+
+    <!-- Menubar for smaller than large screen -->
+    <ul
+      class="text-base font-medium text-slate-800 flex gap-2 justify-evenly w-full lg:hidden"
+    >
+      <li
+        *ngFor="let item of menuItems"
+        class="p-2 w-full hover:bg-blue-100 border-x border-blue-200"
+        routerLinkActive="bg-blue-200 rounded-md"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        <a
+          [routerLink]="item.link"
+          class="flex items-center gap-1 justify-center"
+        >
+          <mat-icon>{{ item.icon }}</mat-icon
+          >{{ item.name }}
+        </a>
+      </li>
+    </ul>
+  </div>
+</header>
