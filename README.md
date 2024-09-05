@@ -1,6 +1,6 @@
 # ProductManagement
 
-A full stack project. Backend using Express.js and Frontend using Angular
+A full stack project. Backend using __Express.js__ and Frontend using __Angular__
 
 ## Step 1: To run the project - server side
 
